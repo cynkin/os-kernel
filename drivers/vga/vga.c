@@ -99,9 +99,8 @@ static void handle_tab()
     }
 }
 
-void vga_put_char(char c)
+static void vga_put_char_unlocked(char c)
 {
-    spinlock_acquire(&vga_lock);
     if (c == '\n')
     {
         cursor_col = 0;
@@ -137,53 +136,23 @@ void vga_put_char(char c)
         scroll();
 
     update_cursor();
+}
+
+void vga_put_char(char c)
+{
+    spinlock_acquire(&vga_lock);
+    vga_put_char_unlocked(c);
     spinlock_release(&vga_lock);
 }
 
 void vga_write(const char *str)
 {
+    spinlock_acquire(&vga_lock);
+
     while (*str)
-    {
-        spinlock_acquire(&vga_lock);
+        vga_put_char_unlocked(*str++);
 
-        if (*str == '\n')
-        {
-            cursor_col = 0;
-            cursor_row++;
-        }
-        else if (*str == '\b')
-        {
-            handle_backspace();
-        }
-        else if (*str == '\t')
-        {
-            handle_tab();
-        }
-        else if (*str == '\r')
-        {
-            cursor_col = 0;
-        }
-        else
-        {
-            VGA_MEMORY[cursor_row * VGA_WIDTH + cursor_col] =
-                vga_entry(*str, color);
-
-            cursor_col++;
-
-            if (cursor_col >= VGA_WIDTH)
-            {
-                cursor_col = 0;
-                cursor_row++;
-            }
-        }
-
-        if (cursor_row >= VGA_HEIGHT)
-            scroll();
-
-        update_cursor();
-        spinlock_release(&vga_lock);
-        str++;
-    }
+    spinlock_release(&vga_lock);
 }
 
 void vga_init()
