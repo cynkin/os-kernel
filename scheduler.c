@@ -1,7 +1,11 @@
-#include "pcb.h"
+#include "scheduler.h"
 
 static pcb_t* current_process = NULL;
 static pcb_t* ready_queue_head = NULL;
+
+pcb_t* get_current_process(void) {
+    return current_process;
+}
 
 void add_to_ready_queue(pcb_t* pcb) {
     if (ready_queue_head == NULL) {
@@ -18,7 +22,7 @@ void add_to_ready_queue(pcb_t* pcb) {
     }
 }
 
-void schedule() {
+void schedule(void) {
     if (current_process == NULL) {
         current_process = ready_queue_head;
     } else {
@@ -30,7 +34,7 @@ void schedule() {
     if (current_process != NULL) {
         current_process->state = RUNNING;
         
-        // This is a placeholder for the Assembly function 
+        // This is the Assembly function 
         // that actually swaps the hardware registers
         context_switch(current_process);
     }

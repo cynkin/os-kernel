@@ -31,3 +31,21 @@ void* kmalloc(uint32_t size) {
     }
     return NULL;
 }
+
+void kfree(void* ptr) {
+    if (ptr == NULL) return;
+
+    block_header_t* block = (block_header_t*)((uint8_t*)ptr - sizeof(block_header_t));
+    block->is_free = 1;
+
+    /* Coalesce adjacent free blocks to prevent fragmentation */
+    block_header_t* current = heap_start;
+    while (current != NULL && current->next != NULL) {
+        if (current->is_free && current->next->is_free) {
+            current->size += sizeof(block_header_t) + current->next->size;
+            current->next = current->next->next;
+            continue; /* check again in case of 3+ consecutive free blocks */
+        }
+        current = current->next;
+    }
+}

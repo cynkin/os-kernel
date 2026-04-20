@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <string.h>
+#include "printf.h"
+#include "memory.h"
 #include "vmm.h"
 
 /* ─── Internal helpers ──────────────────────────────────────────────────── */
@@ -14,7 +14,7 @@ static pte_t *get_or_create_table(vmm_t *vmm, pte_t *table, u64 index, u64 flags
     if (!(table[index] & PTE_PRESENT)) {
         paddr_t page = pmm_alloc(vmm->pmm);
         if (page == (paddr_t)-1) {
-            fprintf(stderr, "[VMM] get_or_create_table: PMM out of memory!\n");
+            printf("[VMM] get_or_create_table: PMM out of memory!\n");
             return NULL;
         }
         table[index] = (page & PTE_ADDR_MASK) | flags | PTE_PRESENT;
@@ -60,7 +60,7 @@ void vmm_init(vmm_t *vmm, pmm_t *pmm) {
     /* Allocate the top-level PML4 page table */
     vmm->pml4_phys = pmm_alloc(pmm);
     if (vmm->pml4_phys == (paddr_t)-1) {
-        fprintf(stderr, "[VMM] vmm_init: failed to allocate PML4!\n");
+        printf("[VMM] vmm_init: failed to allocate PML4!\n");
         vmm->pml4 = NULL;
         return;
     }
@@ -123,12 +123,12 @@ int vmm_unmap(vmm_t *vmm, vaddr_t virt) {
 
     pte_t *pt = walk_table(vmm, virt, NULL, NULL, NULL);
     if (!pt) {
-        fprintf(stderr, "[VMM] vmm_unmap: 0x%lx not mapped!\n", (unsigned long)virt);
+        printf("[VMM] vmm_unmap: 0x%lx not mapped!\n", (unsigned long)virt);
         return -1;
     }
 
     if (!(pt[l1] & PTE_PRESENT)) {
-        fprintf(stderr, "[VMM] vmm_unmap: 0x%lx not present!\n", (unsigned long)virt);
+        printf("[VMM] vmm_unmap: 0x%lx not present!\n", (unsigned long)virt);
         return -1;
     }
 

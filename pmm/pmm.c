@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <string.h>
+#include "printf.h"
+#include "memory.h"
 #include "pmm.h"
 
 /*
@@ -14,7 +14,7 @@ static u8 phys_mem[PHYS_MEM_SIZE];
 
 void *phys_to_virt(paddr_t addr) {
     if (addr >= PHYS_MEM_SIZE) {
-        fprintf(stderr, "[PMM] phys_to_virt: addr 0x%lx out of range!\n",
+        printf( "[PMM] phys_to_virt: addr 0x%lx out of range!\n",
                 (unsigned long)addr);
         return NULL;
     }
@@ -23,7 +23,7 @@ void *phys_to_virt(paddr_t addr) {
 
 paddr_t virt_to_phys(void *ptr) {
     if ((u8 *)ptr < phys_mem || (u8 *)ptr >= phys_mem + PHYS_MEM_SIZE) {
-        fprintf(stderr, "[PMM] virt_to_phys: pointer out of range!\n");
+        printf( "[PMM] virt_to_phys: pointer out of range!\n");
         return (paddr_t)-1;
     }
     return (paddr_t)((u8 *)ptr - phys_mem);
@@ -86,7 +86,7 @@ void pmm_init(pmm_t *pmm, const memory_map_t *mmap) {
 
 paddr_t pmm_alloc(pmm_t *pmm) {
     if (pmm->free_pages == 0) {
-        fprintf(stderr, "[PMM] pmm_alloc: OUT OF MEMORY!\n");
+        printf( "[PMM] pmm_alloc: OUT OF MEMORY!\n");
         return (paddr_t)-1;
     }
 
@@ -103,7 +103,7 @@ paddr_t pmm_alloc(pmm_t *pmm) {
         }
     }
 
-    fprintf(stderr, "[PMM] pmm_alloc: no free page found!\n");
+    printf( "[PMM] pmm_alloc: no free page found!\n");
     return (paddr_t)-1;
 }
 
@@ -111,7 +111,7 @@ paddr_t pmm_alloc(pmm_t *pmm) {
 
 paddr_t pmm_alloc_n(pmm_t *pmm, u64 n) {
     if (n == 0 || pmm->free_pages < n) {
-        fprintf(stderr, "[PMM] pmm_alloc_n: not enough free pages (need %llu, have %llu)\n",
+        printf( "[PMM] pmm_alloc_n: not enough free pages (need %llu, have %llu)\n",
                 (unsigned long long)n, (unsigned long long)pmm->free_pages);
         return (paddr_t)-1;
     }
@@ -138,7 +138,7 @@ paddr_t pmm_alloc_n(pmm_t *pmm, u64 n) {
         }
     }
 
-    fprintf(stderr, "[PMM] pmm_alloc_n: no contiguous block of %llu pages found!\n",
+    printf( "[PMM] pmm_alloc_n: no contiguous block of %llu pages found!\n",
             (unsigned long long)n);
     return (paddr_t)-1;
 }
@@ -147,12 +147,12 @@ paddr_t pmm_alloc_n(pmm_t *pmm, u64 n) {
 
 void pmm_free(pmm_t *pmm, paddr_t addr) {
     if (addr % PAGE_SIZE != 0) {
-        fprintf(stderr, "[PMM] pmm_free: addr 0x%lx not page-aligned!\n",
+        printf( "[PMM] pmm_free: addr 0x%lx not page-aligned!\n",
                 (unsigned long)addr);
         return;
     }
     if (addr >= PHYS_MEM_SIZE) {
-        fprintf(stderr, "[PMM] pmm_free: addr 0x%lx out of range!\n",
+        printf( "[PMM] pmm_free: addr 0x%lx out of range!\n",
                 (unsigned long)addr);
         return;
     }
@@ -160,7 +160,7 @@ void pmm_free(pmm_t *pmm, paddr_t addr) {
     u64 page = addr / PAGE_SIZE;
 
     if (!bitmap_test(pmm->bitmap, page)) {
-        fprintf(stderr, "[PMM] pmm_free: double-free at 0x%lx!\n",
+        printf( "[PMM] pmm_free: double-free at 0x%lx!\n",
                 (unsigned long)addr);
         return;
     }
