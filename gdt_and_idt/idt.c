@@ -1,6 +1,6 @@
 #include "idt.h"
-#include <string.h> /* memset */
-#include "idt.h"
+#include <string.h>     /* memset */
+#include "../cpu/isr.h" // Include isr.h for isr_unhandled_interrupt and other handlers
 
 extern void idt_flush(uint32_t);
 /*
@@ -77,7 +77,7 @@ void idt_register_handler(uint8_t vector, isr_handler_t fn)
  */
 void isr_common_handler(interrupt_frame_t *frame)
 {
-    if (isr_handlers[frame->int_no] != 0)
+    if (isr_handlers[frame->int_no] != NULL) // Use NULL instead of 0 for clarity
     {
         /* Call the registered C handler, passing the full CPU state */
         isr_handlers[frame->int_no](frame);
@@ -85,10 +85,10 @@ void isr_common_handler(interrupt_frame_t *frame)
     else
     {
         /*
-         * Unhandled interrupt.
-         * In a real kernel: print frame->int_no, frame->err_code,
-         * frame->eip, then halt or kill the current task.
+         * No specific handler was registered for this interrupt.
+         * Call the generic unhandled interrupt handler.
          */
+        isr_unhandled_interrupt(frame);
     }
 }
 
@@ -172,26 +172,27 @@ void idt_init(void)
     idt_set_entry(46, (uint32_t)irq14, 0x08, IDT_KERNEL_INTERRUPT); /* IRQ14 Primary ATA        */
     idt_set_entry(47, (uint32_t)irq15, 0x08, IDT_KERNEL_INTERRUPT); /* IRQ15 Secondary ATA      */
 
+    // Register C-level handlers for CPU exceptions
+    idt_register_handler(0, isr_divide_by_zero);
+    idt_register_handler(6, isr_invalid_opcode); // Register the new Invalid Opcode handler
+    idt_register_handler(8, isr_double_fault);
+    idt_register_handler(13, isr_general_protection);
+    idt_register_handler(14, isr_page_fault);
+
+    // Register C-level handler for PIT Timer IRQ
+    idt_register_handler(32, irq0_timer_handler);
+
+    // For all other interrupt vectors that haven't been explicitly assigned a handler,
+    // register the generic unhandled interrupt handler. This ensures every interrupt
+    // vector has a C-level handler function.
+    for (int i = 0; i < IDT_ENTRY_COUNT; i++)
+    {
+        if (isr_handlers[i] == NULL)
+        {
+            isr_handlers[i] = isr_unhandled_interrupt;
+        }
+    }
+
     /* Load IDTR and enable interrupts (sti is called inside idt_flush) */
-    idt_flush((uint32_t)&idt_ptr);
-}
-
-void idt_set_gate(int n, uint32_t handler)
-{
-    idt[n].offset_low = handler & 0xFFFF;
-    idt[n].selector = 0x08; // kernel code segment
-    idt[n].zero = 0;
-    idt[n].type_attr = 0x8E; // present, ring 0, interrupt gate
-    idt[n].offset_high = (handler >> 16) & 0xFFFF;
-}
-
-void idt_init()
-{
-    idt_ptr.limit = sizeof(idt) - 1;
-    idt_ptr.base = (uint32_t)&idt;
-
-    for (int i = 0; i < 256; i++)
-        idt_set_gate(i, 0);
-
     idt_flush((uint32_t)&idt_ptr);
 }

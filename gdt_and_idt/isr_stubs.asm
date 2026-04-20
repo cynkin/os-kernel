@@ -41,7 +41,7 @@ extern isr_common_handler   ; our C dispatcher in idt.c
 isr_common_stub:
     pusha                   ; Push EAX,ECX,EDX,EBX,ESP,EBP,ESI,EDI (8 regs × 4B)
 
-    mov  ax, ds             ; Save current data segment selector
+    mov  eax, ds             ; Save current data segment selector
     push eax                ; (push as 32-bit for alignment)
 
     mov  ax, 0x10           ; Switch DS/ES/FS/GS to kernel data segment
@@ -148,38 +148,3 @@ IRQ 12, 44    ; PS/2 Mouse
 IRQ 13, 45    ; FPU / Math Coprocessor
 IRQ 14, 46    ; Primary ATA/IDE Disk
 IRQ 15, 47    ; Secondary ATA/IDE Disk
-```
-
----
-
-## How Everything Connects
-```
-kernel_main()
-    │
-    ├── gdt_init()
-    │     ├── gdt_set_entry() × 5   (null, k-code, k-data, u-code, u-data)
-    │     └── gdt_flush()           (lgdt → far jmp to reload CS → reload DS/SS/etc)
-    │
-    └── idt_init()
-          ├── idt_set_entry() × 38  (exceptions 0–21 + IRQs 32–47)
-          └── idt_flush()           (lidt → sti)
-
-          Later, drivers call:
-          idt_register_handler(33, keyboard_handler)
-          idt_register_handler(14, page_fault_handler)
-
-─────────────────────────────────────────────────────────
-At runtime, when an interrupt fires (e.g. IRQ1 keyboard):
-
-  CPU: detects IRQ1
-    → reads IDT[33]
-    → jumps to irq1 stub       (isr_stubs.asm)
-    → push 0, push 33
-    → jmp isr_common_stub
-    → pusha, save DS
-    → push ESP (frame ptr)
-    → call isr_common_handler  (idt.c)
-    → isr_handlers[33](frame)  → keyboard_handler()
-    → restore DS, popa
-    → add esp,8  (skip int_no + err_code)
-    → iret                     (restores EIP, CS, EFLAGS)

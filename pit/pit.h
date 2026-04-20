@@ -13,5 +13,6 @@
  * Typical value: pit_init(100)  -> 100 ticks per second
  */
 void pit_init(uint32_t hz);
+uint32_t pit_get_frequency(); // New: Returns the currently configured PIT frequency
 
 #endif

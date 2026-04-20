@@ -1,5 +1,5 @@
 #include "printf.h"
-#include "vga.h"
+#include "../drivers/vga/vga.h"
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -89,15 +89,33 @@ static int handle_ansi(const char **fmt)
 
     switch (code)
     {
-        case 30: vga_set_color(0x00); break;
-        case 31: vga_set_color(0x04); break;
-        case 32: vga_set_color(0x02); break;
-        case 33: vga_set_color(0x06); break;
-        case 34: vga_set_color(0x01); break;
-        case 35: vga_set_color(0x05); break;
-        case 36: vga_set_color(0x03); break;
-        case 37: vga_set_color(0x07); break;
-        case 0:  vga_set_color(0x0F); break;
+    case 30:
+        vga_set_color(0x00);
+        break;
+    case 31:
+        vga_set_color(0x04);
+        break;
+    case 32:
+        vga_set_color(0x02);
+        break;
+    case 33:
+        vga_set_color(0x06);
+        break;
+    case 34:
+        vga_set_color(0x01);
+        break;
+    case 35:
+        vga_set_color(0x05);
+        break;
+    case 36:
+        vga_set_color(0x03);
+        break;
+    case 37:
+        vga_set_color(0x07);
+        break;
+    case 0:
+        vga_set_color(0x0F);
+        break;
     }
 
     *fmt = p;
@@ -123,28 +141,28 @@ void vprintf(const char *fmt, va_list args)
 
             switch (*fmt)
             {
-                case 'd':
-                    print_number(va_arg(args, int));
-                    break;
+            case 'd':
+                print_number(va_arg(args, int));
+                break;
 
-                case 'x':
-                    print_hex(va_arg(args, unsigned int));
-                    break;
+            case 'x':
+                print_hex(va_arg(args, unsigned int));
+                break;
 
-                case 'p':
-                    print_ptr((uintptr_t)va_arg(args, void *));
-                    break;
+            case 'p':
+                print_ptr((uintptr_t)va_arg(args, void *));
+                break;
 
-                case 's':
-                    vga_write(va_arg(args, char *));
-                    break;
+            case 's':
+                vga_write(va_arg(args, char *));
+                break;
 
-                case 'c':
-                    vga_put_char((char)va_arg(args, int));
-                    break;
+            case 'c':
+                vga_put_char((char)va_arg(args, int));
+                break;
 
-                default:
-                    vga_put_char(*fmt);
+            default:
+                vga_put_char(*fmt);
             }
         }
         else
