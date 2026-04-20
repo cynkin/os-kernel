@@ -1,5 +1,5 @@
 #include "idt.h"
-#include <string.h> /* memset */
+#include "memory.h" /* memset */
 #include "idt.h"
 
 extern void idt_flush(uint32_t);
@@ -173,25 +173,5 @@ void idt_init(void)
     idt_set_entry(47, (uint32_t)irq15, 0x08, IDT_KERNEL_INTERRUPT); /* IRQ15 Secondary ATA      */
 
     /* Load IDTR and enable interrupts (sti is called inside idt_flush) */
-    idt_flush((uint32_t)&idt_ptr);
-}
-
-void idt_set_gate(int n, uint32_t handler)
-{
-    idt[n].offset_low = handler & 0xFFFF;
-    idt[n].selector = 0x08; // kernel code segment
-    idt[n].zero = 0;
-    idt[n].type_attr = 0x8E; // present, ring 0, interrupt gate
-    idt[n].offset_high = (handler >> 16) & 0xFFFF;
-}
-
-void idt_init()
-{
-    idt_ptr.limit = sizeof(idt) - 1;
-    idt_ptr.base = (uint32_t)&idt;
-
-    for (int i = 0; i < 256; i++)
-        idt_set_gate(i, 0);
-
     idt_flush((uint32_t)&idt_ptr);
 }

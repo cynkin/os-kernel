@@ -16,6 +16,4 @@ idt_flush:
     lidt [eax]          ; Load 6 bytes into IDTR:
                         ;   IDTR.limit ← idt_ptr.limit
                         ;   IDTR.base  ← idt_ptr.base
-    sti                 ; Set Interrupt Flag — enables maskable interrupts
-                        ; (Do NOT call sti before GDT is loaded and stable!)
     ret

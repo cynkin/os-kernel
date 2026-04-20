@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <string.h>
+#include "printf.h"
+#include "memory.h"
 #include "memory_map.h"
 
 const char *mmap_type_str(mmap_type_t type) {
@@ -20,7 +20,7 @@ void mmap_init(memory_map_t *mmap) {
 
 void mmap_add_entry(memory_map_t *mmap, u64 base, u64 length, mmap_type_t type) {
     if (mmap->count >= MMAP_MAX_ENTRIES) {
-        fprintf(stderr, "[MMAP] ERROR: max entries (%d) reached!\n", MMAP_MAX_ENTRIES);
+        printf("[MMAP] ERROR: max entries (%d) reached!\n", MMAP_MAX_ENTRIES);
         return;
     }
     mmap->entries[mmap->count].base   = base;

@@ -104,7 +104,7 @@ static int handle_ansi(const char **fmt)
     return 1;
 }
 
-void vprintf(const char *fmt, va_list args)
+int vprintf(const char *fmt, va_list args)
 {
     while (*fmt)
     {
@@ -154,13 +154,15 @@ void vprintf(const char *fmt, va_list args)
 
         fmt++;
     }
+    return 0;
 }
 
-void printf(const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
     va_list args;
 
     va_start(args, fmt);
     vprintf(fmt, args);
     va_end(args);
+    return 0;
 }

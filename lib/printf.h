@@ -3,8 +3,8 @@
 
 #include <stdarg.h>
 
-void printf(const char *fmt, ...);
-void vprintf(const char *fmt, va_list args);
+int printf(const char *fmt, ...);
+int vprintf(const char *fmt, va_list args);
 
 #define printk printf
 
