@@ -53,3 +53,17 @@ void log_error(const char *fmt, ...)
 
     printf("\033[0m\n");
 }
+
+void log_debug(const char *fmt, ...)
+{
+    va_list args;
+
+    print_timestamp();
+    printf("\033[36m[DEBUG] ");
+
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+
+    printf("\033[0m\n");
+}
